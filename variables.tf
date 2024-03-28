@@ -13,3 +13,4 @@ variable "machine_type" {
 variable "image" {
   description = "The image for the Compute Engine instance"
 }
+
