@@ -1,26 +1,19 @@
-name: Convert Values to tfvars
+name: Convert YAML to tfvars
 on:
   push:
-    branches:
-      - main  # Adjust this according to your repository's default branch
+    branches: [ main ]
 jobs:
-  convert_values:
+  convert:
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v2
-    - name: Setup Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'  # Specify the Python version you need
-    - name: Install PyYAML
-      run: pip install pyyaml
-    - name: Convert values.yaml to tfvars
-      run: python convert.py values.yaml values.tfvars  # Adjust this according to your actual conversion script
-    - name: Commit changes
-      run: |
-        git config --global user.name "GitHub Actions"
-        git config --global user.email "actions@users.noreply.github.com"
-        git add values.tfvars
-        git commit -m "Convert values.yaml to tfvars"
-        git push
+      - uses: actions/checkout@v3
+      - name: Install yq for YAML processing (optional)
+        run: sudo apt-get update && sudo apt-get install -y yq  # Only necessary if you prefer yq over native YAML parsing
+      - name: Convert YAML to tfvars (using native YAML parsing)
+        run: |
+          cat variables.yaml | jq -r '. as entries | to_entries | map(.key + " = " + .value) | .[]' > terraform.tfvars
+      - name: Convert YAML to tfvars (using yq - optional)
+        run: |  # Uncomment if using yq
+          yq -r '. as entries | to_entries[] | (.key + "=" + .value) | .[]' variables.yaml > terraform.tfvars
+      - name: Verify tfvars content (optional)
+        run: cat terraform.tfvars
