@@ -11,10 +11,11 @@ jobs:
        # run: sudo apt-get update && sudo apt-get install -y yq  # Only necessary if you prefer yq over native YAML parsing
       - name: Convert YAML to tfvars (using native YAML parsing)
         run: |
-         cat variables.yaml | jq -r '. as entries | to_entries | map(.key + " = " + .value) | .[]' > terraform.tfvars
-        # cat variables.yaml | jq -r 'to_entries | map("\(.key) = \(.value | tostring)") | .[]' > terraform.tfvars
+         cat vaiable.yaml | jq -r 'to_entries | mao("\(.key) = \(.value | tosting)" | .[]' > terraform.tfvars
+        # cat variables.yaml | jq -r '. as entries | to_entries | map(.key + " = " + .value) | .[]' > terraform.tfvars
+          # cat variables.yaml | jq -r 'to_entries | map("\(.key) = \(.value | tostring)") | .[]' > terraform.tfvars
       - name: Convert YAML to tfvars (using yq - optional)
-        run: |  Uncomment if using yq
+        run: |  # Uncomment if using yq
           yq -r '. as entries | to_entries[] | (.key + "=" + .value) | .[]' variables.yaml > terraform.tfvars
       - name: Verify tfvars content (optional)
         run: cat terraform.tfvars
