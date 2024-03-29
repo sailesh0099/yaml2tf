@@ -1,24 +1,44 @@
-name: Convert YAML to tfvars
+name: Convert YAML to TFVar and Deploy GCP Resources
+
 on:
   push:
-    branches: [ main ]
+    paths:
+      - 'input.yaml'
+
 jobs:
-  convert:
-    runs-on: ubuntu-22.04
+  convert_and_deploy:
+    runs-on: ubuntu-latest
+    
     steps:
-      - uses: actions/checkout@v4
-      - name: Install jq 
-        run: sudo apt-get update && sudo apt-get install -y jq
-     # - name: Install yq for YAML processing (optional)
-       # run: sudo apt-get update && sudo apt-get install -y yq  # Only necessary if you prefer yq over native YAML parsing
-      - name: Convert YAML to tfvars (using native YAML parsing)
-        run: |
-         cat variables.yaml | jq -r '. as entries | to_entries | map(.key + " = " + .value) | .[]' > terraform.tfvars
-        # cat variables.yaml | jq -r 'to_entries | map("\(.key) = \(.value | tostring)") | .[]' > terraform.tfvars
-        # cat variables.yaml | jq -r '. as entries | to_entries | map(.key + " = " + .value) | .[]' > terraform.tfvars
-          # cat variables.yaml | jq -r 'to_entries | map("\(.key) = \(.value | tostring)") | .[]' > terraform.tfvars
-      - name: Convert YAML to tfvars (using yq - optional)
-        run: |  # Uncomment if using yq
-          yq -r '. as entries | to_entries[] | (.key + "=" + .value) | .[]' variables.yaml > terraform.tfvars
-      - name: Verify tfvars content (optional)
-        run: cat terraform.tfvars
+    - name: Checkout repository
+      uses: actions/checkout@v2
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v2
+      with:
+        node-version: '14'
+        
+    - name: Install dependencies
+      run: npm install nunjucks
+      
+    - name: Convert YAML to TFVar
+      run: |
+        node -e "const nunjucks = require('nunjucks'), fs = require('fs'); const yamlData = fs.readFileSync('input.yaml', 'utf8'); const template = fs.readFileSync('template.njk', 'utf8'); const compiledTemplate = nunjucks.compile(template); const renderedData = compiledTemplate.render(yamlData); fs.writeFileSync('terraform.tfvars', renderedData);"
+        
+    - name: Initialize Terraform
+      uses: hashicorp/setup-terraform@v1
+      with:
+        terraform_version: '1.1.0'
+        
+    - name: Terraform Format and Init
+      run: |
+        terraform fmt
+        terraform init
+        
+    - name: Terraform Plan
+      run: terraform plan
+      
+    - name: Terraform Apply
+      run: terraform apply -auto-approve
+      env:
+        GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
