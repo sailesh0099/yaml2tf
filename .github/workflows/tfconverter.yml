@@ -8,37 +8,29 @@ on:
 jobs:
   convert_and_deploy:
     runs-on: ubuntu-latest
-    
+    
     steps:
     - name: Checkout repository
-      uses: actions/checkout@v2
-      
-    - name: Setup Node.js
-      uses: actions/setup-node@v2
+      uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
       with:
-        node-version: '14'
-        
+        python-version: '3.x'
+
     - name: Install dependencies
-      run: npm install nunjucks
-      
-    - name: Convert YAML to TFVar
       run: |
-        node -e "const nunjucks = require('nunjucks'), fs = require('fs'); const yamlData = fs.readFileSync('input.yaml', 'utf8'); const template = fs.readFileSync('template.njk', 'utf8'); const compiledTemplate = nunjucks.compile(template); const renderedData = compiledTemplate.render(yamlData); fs.writeFileSync('terraform.tfvars', renderedData);"
-        
-    - name: Initialize Terraform
-      uses: hashicorp/setup-terraform@v1
-      with:
-        terraform_version: '1.1.0'
-        
-    - name: Terraform Format and Init
+        python -m pip install --upgrade pip
+        pip install pyhcl
+        
+    - name: Convert YAML to HCL
       run: |
-        terraform fmt
-        terraform init
-        
-    - name: Terraform Plan
-      run: terraform plan
-      
-    - name: Terraform Apply
-      run: terraform apply -auto-approve
-      env:
-        GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+        python convert_yaml_to_hcl.py
+        
+    - name: Commit changes
+      run: |
+        git config --global user.name 'GitHub Actions'
+        git config --global user.email 'actions@users.noreply.github.com'
+        git add terraform.tfvars
+        git commit -m "Convert YAML to HCL"
+        git push
