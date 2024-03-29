@@ -1,6 +1,0 @@
-project_id: driven-backbone-415804
-region: us-central1
-zone: us-central1-a
-machine_type: n1-standard-1
-image: projects/debian-cloud/global/images/debian-10-buster-v20220322
-
