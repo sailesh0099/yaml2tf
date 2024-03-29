@@ -26,6 +26,10 @@ jobs:
     - name: Convert YAML to HCL
       run: |
         python convert_yaml_to_hcl.py
+
+    - name: changes check
+      run: |
+         cat terraform.tfvars
         
     - name: Commit changes
       run: |
