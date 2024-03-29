@@ -21,7 +21,7 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install pyhcl pyyaml hclgen
+        pip install pyhcl pyyaml
         
     - name: Convert YAML to HCL
       run: |
