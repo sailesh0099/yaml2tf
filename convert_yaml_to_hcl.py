@@ -1,5 +1,5 @@
 import yaml
-import hclgen
+from hcl import dumps
 def yaml_to_hcl(yaml_data):
     hcl_data = {}
     for key, value in yaml_data.items():
@@ -14,6 +14,6 @@ def main():
     
     hcl_data = yaml_to_hcl(yaml_data)
     with open('terraform.tfvars', 'w') as hcl_file:
-        hcl_file.write(hclgen.generate(hcl_data))
+        hcl_file.write(dumps(hcl_data))
 if name == "__main__":
     main()
